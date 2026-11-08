@@ -1,4 +1,6 @@
 
+import os
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,20 +8,35 @@ from app.services.demo_data import (
     get_all_customers,
     get_customer_by_id,
     get_portfolio_summary,
-    get_early_warnings
+    get_early_warnings,
 )
 
 app = FastAPI(
     title="CreditGuard AI",
     description="AI-powered Credit Risk Early Warning System",
-    version="1.0.0"
+    version="1.0.0",
 )
+
+# Local development + production frontend origins
+frontend_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+production_frontend_url = os.getenv("FRONTEND_URL", "").strip()
+
+if production_frontend_url:
+    frontend_origins.extend(
+        origin.strip().rstrip("/")
+        for origin in production_frontend_url.split(",")
+        if origin.strip()
+    )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=frontend_origins,
+    allow_credentials=False,
+    allow_methods=["GET"],
     allow_headers=["*"],
 )
 
@@ -29,7 +46,7 @@ def home():
     return {
         "application": "CreditGuard AI",
         "status": "running",
-        "message": "Credit risk intelligence platform"
+        "message": "Credit risk intelligence platform",
     }
 
 
@@ -39,14 +56,14 @@ def health_check():
         "status": "healthy",
         "backend": "FastAPI",
         "application": "CreditGuard AI",
-        "data_source": "synthetic_demo_data"
+        "data_source": "synthetic_demo_data",
     }
 
 
 @app.get("/api/customers")
 def customers(
     search: str = Query(default=""),
-    risk_level: str = Query(default="")
+    risk_level: str = Query(default=""),
 ):
     results = get_all_customers()
 
@@ -68,7 +85,7 @@ def customers(
 
     return {
         "total": len(results),
-        "customers": results
+        "customers": results,
     }
 
 
@@ -79,7 +96,7 @@ def customer_details(customer_id: str):
     if customer is None:
         raise HTTPException(
             status_code=404,
-            detail="Customer not found"
+            detail="Customer not found",
         )
 
     return customer
@@ -96,5 +113,5 @@ def warnings():
 
     return {
         "total": len(results),
-        "warnings": results
+        "warnings": results,
     }
