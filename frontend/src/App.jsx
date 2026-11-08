@@ -41,7 +41,9 @@ import {
   CartesianGrid,
 } from 'recharts'
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api'
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
+).replace(/\/+$/, '')
 
 const navigation = [
   { name: 'Overview', icon: LayoutDashboard },
@@ -62,7 +64,7 @@ async function fetchAPI(endpoint) {
   const response = await fetch(`${API_BASE_URL}${endpoint}`)
 
   if (!response.ok) {
-    throw new Error(`Request failed (${response.status})`)
+    throw new Error(`API request failed: ${response.status}`)
   }
 
   return response.json()
@@ -123,7 +125,7 @@ function App() {
     } catch (err) {
       setApiStatus('Offline')
       setError(
-        'Could not load dashboard data. Make sure the FastAPI backend is running at http://127.0.0.1:8000.'
+        'Could not connect to the backend. Please check the backend service and try again.'
       )
       console.error('Dashboard API error:', err)
     } finally {
